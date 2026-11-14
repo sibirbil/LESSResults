@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from src.names import display_name
 from src.problems import ALL_PROBLEMS
 from src.resultdirs import MAIN
 
@@ -105,7 +106,7 @@ def main():
     ax.set_xticks(range(len(order)))
     ax.set_xticklabels([f"{m}\n({coverage[m]})" for m in order], fontsize=9)
     ax.set_yticks(range(len(problems)))
-    ax.set_yticklabels([p.replace("_GROUPED", "").lower() for p in problems], fontsize=9)
+    ax.set_yticklabels([display_name(p) for p in problems], fontsize=9)
     ax.set_xlabel("method (problems scored)", fontsize=10)
 
     avg = ranks.mean()

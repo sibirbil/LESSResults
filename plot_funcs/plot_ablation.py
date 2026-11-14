@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from src.names import display_name
 from src.resultdirs import ABLATION
 
 # Set plot style
@@ -66,11 +67,8 @@ def _complete_problems(result_dir, n_arms=8, n_folds=4):
 
 
 def _label(name):
-    """Short axis label: eighteen names do not fit at full length."""
-    key = name.replace("_GROUPED", "").lower()
-    short = {"cpusmallscale": "cpusmall", "blogfeedback": "blogfeed",
-             "airquality": "airqual"}
-    return short.get(key, key)
+    """Axis label: the paper name of the problem."""
+    return display_name(name)
 
 
 def load_results(save_dir=ABLATION):

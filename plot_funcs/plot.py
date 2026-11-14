@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from src.names import display_name
 from src.problems import ALL_PROBLEMS
 from src.resultdirs import MAIN
 
@@ -173,7 +174,8 @@ def plot_rankings(algorithms, problems, ranking_matrix, avg_rankings,
 
     # Fix x-axis labels - Set ticks and labels properly
     ax.set_xticks(range(len(problems)))
-    ax.set_xticklabels(problems, rotation=45, ha="right", fontsize=12)
+    ax.set_xticklabels([display_name(p) for p in problems], rotation=45, ha="right",
+                       fontsize=12)
     ax.set_yticks(range(len(algorithms)))
     ax.set_yticklabels(algorithms, fontsize=12)
     ax.set_xlabel("Problem", fontsize=12)
@@ -368,7 +370,8 @@ def plot_scores(algorithms, problems, score_matrix, avg_rankings, title_suffix="
 
     # Customize axes
     ax.set_xticks(range(len(problems)))
-    ax.set_xticklabels(problems, rotation=45, ha="right", fontsize=10)
+    ax.set_xticklabels([display_name(p) for p in problems], rotation=45, ha="right",
+                       fontsize=10)
     ax.set_yticks(range(len(algorithms)))
     ax.set_yticklabels(algorithms, fontsize=10)
     ax.set_xlabel("Problem", fontsize=10)
@@ -478,7 +481,7 @@ def plot_problem_specific_results(all_results):
         )
 
         # Customize the plot
-        ax.set_title(f"{problem_name}", fontweight="bold", fontsize=14)
+        ax.set_title(display_name(problem_name), fontweight="bold", fontsize=14)
         ax.set_xlabel("Algorithm", fontsize=12)
         ax.set_ylabel("Problem Score (MSE)", fontsize=12)
         ax.set_xticks(range(len(algorithms)))

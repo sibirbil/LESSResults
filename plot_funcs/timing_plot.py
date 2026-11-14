@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from src.names import display_name
 from src.resultdirs import TIMING
 
 # A bar of zero cannot be drawn on a log axis, so readings below FLOOR are
@@ -82,7 +83,7 @@ def plot_timing_results():
             ax.set_yscale("log")
             ax.set_xlabel("Number of Subsets", fontsize=16)
             ax.set_ylabel("Time (seconds, log scale)", fontsize=16)
-            ax.set_title(f"{problem_name}: LESS Fit and Predict", fontsize=18)
+            ax.set_title(f"{display_name(problem_name)}: LESS Fit and Predict", fontsize=18)
             ax.tick_params(labelsize=14)
             ax.grid(True, which="both", ls="--", linewidth=0.5)
             ax.legend(fontsize=14)
@@ -142,7 +143,7 @@ def plot_timing_results():
             ax.set_xlim(-0.8, len(df) - 0.2)
             ax.set_ylabel("Time (seconds, log scale)", fontsize=18)
             ax.set_xlabel("")
-            ax.set_title(f"{problem_name}: Fit and Predict", fontsize=20)
+            ax.set_title(f"{display_name(problem_name)}: Fit and Predict", fontsize=20)
             ax.tick_params(axis="y", labelsize=16)
             ax.legend(fontsize=12, ncol=2)
             fig.tight_layout()
