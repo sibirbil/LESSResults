@@ -33,6 +33,7 @@ The results of every study are stored in `logs/`, one JSON file per problem:
 | `logs/variants/` | subset selection and data splitting |
 | `logs/timing/` | computation times |
 | `logs/mag_env/` | Magging with the environments of the data |
+| `logs/heterogeneity/` | synthetic data with controlled heterogeneity (`results.csv`: test MSE for every `n_subsets`; `cv.csv` and `selected_summary.csv`: `n_subsets` chosen by 4-fold cross-validation) |
 
 In the cross-validated studies, method keys hold the test MSE of the four
 outer folds, and the configuration the inner cross-validation selected on each
@@ -57,6 +58,9 @@ PYTHONPATH=. python plot_funcs/timing_plot.py        # computation times
 PYTHONPATH=. python script_funcs/posthoc_table.py    # statistical tests
 ```
 
+The figures of the synthetic heterogeneity experiment are written to
+`plots/heterogeneity/` by the experiment itself.
+
 ## Rerunning the experiments
 
 Every script resumes from the result files in its output directory, so give a
@@ -70,10 +74,13 @@ PYTHONPATH=. python script_funcs/incremental.py --results-dir rerun_incremental
 PYTHONPATH=. python script_funcs/variants.py --results-dir rerun_variants
 PYTHONPATH=. python script_funcs/timing.py --datasets energy housing ctslices casp --repeats 2
 PYTHONPATH=. python script_funcs/mag_environments.py
+PYTHONPATH=. python script_funcs/heterogeneity.py
+PYTHONPATH=. python script_funcs/heterogeneity.py --cv
 ```
 
-`timing.py` and `mag_environments.py` write to `logs/timing/` and
-`logs/mag_env/`; move those directories aside before rerunning them.
+`timing.py`, `mag_environments.py` and `heterogeneity.py` write to
+`logs/timing/`, `logs/mag_env/` and `logs/heterogeneity/`; move those
+directories aside before rerunning them.
 `main.py` and `anfis_test.py` run all 18 problems by default and skip the
 cells listed in `src/coverage.py`. Run `anfis_test.py` on its own: scikit-anfis
 writes a checkpoint with a fixed name to the working directory. The

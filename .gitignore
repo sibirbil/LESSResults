@@ -180,6 +180,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 *.csv
+!logs/heterogeneity/results.csv
+!logs/heterogeneity/cv.csv
+!logs/heterogeneity/selected_summary.csv
 *.DS_Store
 # scikit-anfis writes a checkpoint to the working directory
 tmp.pkl
