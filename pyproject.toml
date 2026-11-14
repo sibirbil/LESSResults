@@ -1,0 +1,37 @@
+[tool.ruff]
+line-length = 100
+exclude = [".venv", "datasetsR", "logs"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle
+    "F",      # pyflakes
+    "I",      # import sorting
+    "UP",     # pyupgrade
+    "B",      # bugbear
+    "C4",     # comprehensions
+    "SIM",    # simplify
+    "RUF",    # ruff-specific
+    "LOG",    # logging misuse
+    "PL",     # pylint
+]
+ignore = [
+    # Log messages contain Turkish text; these rules flag its letters as
+    # confusable with Latin lookalikes.
+    "RUF001", "RUF002", "RUF003",
+    # The experiment drivers legitimately take many arguments, run long, and read
+    # better with fold counts and thresholds written inline.
+    "PLR0911",
+    "PLR0913", "PLR0917", "PLR2004", "PLR0912", "PLR0915",
+    # Imports inside functions are deliberate here: heavy or optional
+    # dependencies (tarfile, glob, statsmodels) load only where used.
+    "PLC0415",
+    "E741",     # ambiguous name `l`
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The experiment scripts parse arguments or set up paths before some imports.
+"script_funcs/*.py" = ["E402"]
+"plot_funcs/*.py" = ["E402"]
+"main.py" = ["E402"]
+"src/budget.py" = ["E402"]
