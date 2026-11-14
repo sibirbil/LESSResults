@@ -6,6 +6,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from src.names import display_name
 from src.resultdirs import VARIANTS
 
 # Set up plotting style
@@ -57,11 +58,8 @@ def _complete_problems(result_dir, n_arms=8, n_folds=4):
 
 
 def _label(name):
-    """Short axis label: the long names collide even when turned."""
-    key = name.replace("_GROUPED", "").lower()
-    short = {"cpusmallscale": "cpusmall", "blogfeedback": "blogfeed",
-             "airquality": "airqual"}
-    return short.get(key, key)
+    """Axis label: the paper name of the problem."""
+    return display_name(name)
 
 
 problems = _complete_problems(VARIANTS)
