@@ -3,13 +3,13 @@
 Data. J clusters in R^p with p >= 2J + 1. A random orthogonal matrix A splits
 R^p into a centre block and a slope block:
 
-    c_j     = a * A[:, j]                                  j = 1..J
+    c_j      = a * A[:, j - 1]                             j = 1..J
     v_0..v_J = A[:, J], ..., A[:, 2J]
-    theta_j = sqrt(kappa) v_0 + sqrt(1 - kappa) v_j
+    theta_j  = sqrt(kappa) v_0 + sqrt(1 - kappa) v_j
 
-so ||theta_j|| = 1, <theta_i, theta_j> = kappa, and every theta_j is orthogonal
-to every centre (theta_j . c_k = 0). Points of cluster j are drawn from
-N(c_j, sigma_x^2 I) and
+with the columns of A indexed from 0. So ||theta_j|| = 1, <theta_i, theta_j> =
+kappa for i != j, and every theta_j is orthogonal to every centre
+(theta_j . c_k = 0). Points of cluster j are drawn from N(c_j, sigma_x^2 I) and
 
     y = <theta_j, x> + noise_std * eps.
 
@@ -26,19 +26,19 @@ independent test set are drawn. On the test set the script records the MSE of
                 defaults,
 
 and merges one row per fit into logs/heterogeneity/results.csv, replacing the
-rows of the methods it recomputes. One figure per LESS-B variant, in
-plots/heterogeneity/, shows test MSE and the relative excess risk
-(MSE - BAYES) / (OLS - BAYES) against n_subsets for every kappa, one panel per
-sigma_x.
+rows of the methods it recomputes. LESS-B-noG is drawn as LESS-B (W-NoG), the
+ablation arm with weighting and no global learner.
 
     PYTHONPATH=. python script_funcs/heterogeneity.py [--variants LESS-B LESS-B-noG]
                                                       [--reference] [--reps 20] [--n-jobs 8]
 
 --cv scores every n_subsets by inner-fold MSE (the shuffled N_IN_CV-fold KFold
 of main.py on the training set) into cv.csv; the n_subsets with the lowest
-inner-fold MSE is the grid-search choice. selected_summary.csv and
-plots/heterogeneity/selected_n_subsets.png give its test MSE / OLS and relative
-excess risk over kappa and sigma_x (--summary redraws them).
+inner-fold MSE is the grid-search choice. selected_summary.csv gives its test
+MSE / OLS and relative excess risk (MSE - BAYES) / (OLS - BAYES) over kappa and
+sigma_x (--summary rewrites it from cv.csv).
+
+plot_funcs/plot_heterogeneity.py draws the figures in plots/heterogeneity/.
 """
 
 import argparse
@@ -216,53 +216,6 @@ def cv_cell(kappa, sigma_x, rep, variants):
     return rows
 
 
-def plot(df, method, path):
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    ramp = ["#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#104281"]
-    sigmas = sorted(df.sigma_x.unique(), reverse=True)
-    kappas = sorted(df.kappa.unique())
-    x_ols, x_bayes = 0.6, M_GRID[-1] * 1.7
-    fig, axes = plt.subplots(
-        2, len(sigmas), figsize=(4.2 * len(sigmas), 8.0), constrained_layout=True, squeeze=False
-    )
-    mean = df.groupby(["sigma_x", "kappa", "method", "n_subsets"], dropna=False).mse.mean()
-    for col, s in enumerate(sigmas):
-        top, bottom = axes[0, col], axes[1, col]
-        for colour, k in zip(ramp, kappas, strict=False):
-            less = mean.loc[(s, k, method)]
-            ols = mean.loc[(s, k, "OLS")].iloc[0]
-            bayes = mean.loc[(s, k, "BAYES")].iloc[0]
-            top.plot(
-                less.index, less.values, color=colour, lw=2, marker="o", ms=5, label=f"κ = {k:g}"
-            )
-            top.scatter([x_ols], [ols], color=colour, marker="s", s=36, zorder=3)
-            top.scatter([x_bayes], [bayes], color=colour, marker="_", s=200, lw=2, zorder=3)
-            if k < 1.0:
-                rel = (less.values - bayes) / (ols - bayes)
-                bottom.plot(
-                    less.index, rel, color=colour, lw=2, marker="o", ms=5, label=f"κ = {k:g}"
-                )
-        for ax in (top, bottom):
-            ax.set_xscale("log")
-            ax.grid(alpha=0.25, which="both")
-            ax.set_xlabel("n_subsets (m)")
-        top.set_yscale("log")
-        top.set_xticks([x_ols, *M_GRID, x_bayes], ["OLS", *(str(m) for m in M_GRID), "Bayes"])
-        top.set_title(f"{method}, σx = {s:g}  (a / σx = {A_SCALE / s:.3g})")
-        bottom.set_xticks(M_GRID, [str(m) for m in M_GRID])
-        bottom.axhline(1.0, color="#5f5e5a", lw=1, ls="--")
-        bottom.axhline(0.0, color="#5f5e5a", lw=1, ls="--")
-        bottom.set_ylim(-0.05, 1.15)
-    axes[0, 0].set_ylabel("test MSE")
-    axes[1, 0].set_ylabel(f"({method} − Bayes) / (OLS − Bayes)")
-    axes[0, -1].legend(frameon=False, loc="upper right")
-    fig.savefig(path, dpi=130)
-
-
 def select(df, cv):
     """Test error at the n_subsets each variant picks by inner-fold MSE.
 
@@ -282,7 +235,8 @@ def select(df, cv):
 def summarise(sel):
     """Mean and 95% half-width over replications per (method, kappa, sigma_x)
     of MSE / OLS (ratio) and of the relative excess risk (rel), with the median
-    chosen n_subsets. rel is undefined at kappa = 1, where OLS is the Bayes rule.
+    chosen n_subsets. rel is left out at kappa = 1, where OLS - BAYES is close
+    to zero.
     """
     g = sel.groupby(["method", "kappa", "sigma_x"])
     out = g.n_subsets.median().rename("median_m").to_frame()
@@ -293,52 +247,11 @@ def summarise(sel):
     return out.reset_index()
 
 
-def plot_selected(table, path):
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    ramp = ["#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#104281"]
-    methods = sorted(table.method.unique())
-    kappas = sorted(table.kappa.unique())
-    fig, axes = plt.subplots(
-        1, len(methods), figsize=(4.6 * len(methods), 4.0), sharey=True, constrained_layout=True
-    )
-    axes = np.atleast_1d(axes)
-    for ax, method in zip(axes, methods, strict=True):
-        for colour, k in zip(ramp, kappas, strict=False):
-            t = table[(table.method == method) & (table.kappa == k)].sort_values("sigma_x")
-            ax.errorbar(
-                A_SCALE / t.sigma_x.to_numpy(),
-                t.ratio,
-                yerr=t.ratio_ci,
-                color=colour,
-                lw=2,
-                marker="o",
-                ms=5,
-                capsize=3,
-                label=f"κ = {k:g}",
-            )
-        ax.axhline(1.0, color="#5f5e5a", lw=1, ls="--")
-        ax.set_xticks(A_SCALE / np.array(SIGMA_X_GRID))
-        ax.set_xticklabels([f"{A_SCALE / s:.3g}" for s in SIGMA_X_GRID])
-        ax.set_xlabel("a / σx  (cluster separation)")
-        ax.set_title(f"{method}, n_subsets chosen by {N_IN_CV}-fold CV")
-        ax.grid(alpha=0.25)
-        ax.set_ylim(0.0, 1.2)
-    axes[0].set_ylabel("test MSE / OLS test MSE")
-    axes[-1].legend(frameon=False, loc="lower left")
-    fig.savefig(path, dpi=130)
-
-
 def write_summary():
     df = pd.read_csv(os.path.join(OUT_DIR, "results.csv"))
     cv = pd.read_csv(os.path.join(OUT_DIR, "cv.csv"))
     table = summarise(select(df, cv))
     table.to_csv(os.path.join(OUT_DIR, "selected_summary.csv"), index=False)
-    os.makedirs(PLOT_DIR, exist_ok=True)
-    plot_selected(table, os.path.join(PLOT_DIR, "selected_n_subsets.png"))
 
 
 def main():
@@ -351,7 +264,7 @@ def main():
         "--cv", action="store_true", help="inner-fold MSE of every n_subsets -> cv.csv"
     )
     parser.add_argument(
-        "--summary", action="store_true", help="only redraw the CV-selected table and figure"
+        "--summary", action="store_true", help="only rewrite selected_summary.csv from cv.csv"
     )
     args = parser.parse_args()
     if args.summary:
@@ -359,7 +272,6 @@ def main():
         return
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    os.makedirs(PLOT_DIR, exist_ok=True)
     cells = [(k, s, r) for k in KAPPA_GRID for s in SIGMA_X_GRID for r in range(args.reps)]
     if args.cv:
         out = Parallel(n_jobs=args.n_jobs, verbose=5)(
@@ -373,7 +285,13 @@ def main():
 
     path = os.path.join(OUT_DIR, "results.csv")
     old = pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
-    reference = args.reference or old.empty or not {"OLS", "BAYES"} <= set(old.method)
+    # OLS and BAYES are recomputed unless every cell already has both.
+    have = set()
+    if not old.empty:
+        ref = old[old.method.isin(["OLS", "BAYES"])]
+        counts = ref.groupby(["kappa", "sigma_x", "rep"]).method.nunique()
+        have = set(counts[counts == 2].index)
+    reference = args.reference or not set(cells) <= have
 
     out = Parallel(n_jobs=args.n_jobs, verbose=5)(
         delayed(run_cell)(*c, args.variants, reference) for c in cells
@@ -383,8 +301,6 @@ def main():
         old = old[~old.method.isin(new.method.unique())]
     df = pd.concat([old, new], ignore_index=True)
     df.to_csv(path, index=False)
-    for name in sorted(set(df.method) & set(VARIANTS)):
-        plot(df, name, os.path.join(PLOT_DIR, f"mse_vs_n_subsets_{name}.png"))
 
 
 if __name__ == "__main__":

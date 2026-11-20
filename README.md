@@ -23,7 +23,8 @@ LESSResults/
 
 ## Results
 
-The results of every study are stored in `logs/`, one JSON file per problem:
+The results are stored in `logs/`, one JSON file per problem except for the
+synthetic heterogeneity experiment:
 
 | Directory | Study |
 |---|---|
@@ -55,16 +56,14 @@ PYTHONPATH=. python plot_funcs/plot_ablation.py      # ablation study
 PYTHONPATH=. python plot_funcs/plot_incremental.py   # local and global learners
 PYTHONPATH=. python plot_funcs/plot_variants.py      # LESS variants
 PYTHONPATH=. python plot_funcs/timing_plot.py        # computation times
+PYTHONPATH=. python plot_funcs/plot_heterogeneity.py # synthetic heterogeneity
 PYTHONPATH=. python script_funcs/posthoc_table.py    # statistical tests
 ```
 
-The figures of the synthetic heterogeneity experiment are written to
-`plots/heterogeneity/` by the experiment itself.
-
 ## Rerunning the experiments
 
-Every script resumes from the result files in its output directory, so give a
-new directory to recompute from scratch:
+The scripts with `--results-dir` resume from the result files in that
+directory, so give a new directory to recompute from scratch:
 
 ```
 PYTHONPATH=. python main.py --no-budget --results-dir rerun
