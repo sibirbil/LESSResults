@@ -29,7 +29,7 @@ os.makedirs("plots/variants", exist_ok=True)
 
 
 def _complete_problems(result_dir, n_arms=8, n_folds=4):
-    """Problems from src.problems whose cells are all there, in suite order.
+    """Problems from src.problems whose cells are all there, in alphabetical order.
 
     A problem is included only when every arm has all of its folds; problems
     with missing cells are printed and skipped.
@@ -40,7 +40,7 @@ def _complete_problems(result_dir, n_arms=8, n_folds=4):
     from src.problems import ALL_PROBLEMS
 
     out, partial = [], []
-    for name in ALL_PROBLEMS:
+    for name in sorted(ALL_PROBLEMS):
         path = _os.path.join(result_dir, f"{name}.json")
         if not _os.path.exists(path):
             continue
